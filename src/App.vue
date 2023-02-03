@@ -1,15 +1,14 @@
-<template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
+<template>  
+  <TetrixMain/>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import TetrixMain from './components/TetrixMain.vue'
 
 export default {
   name: 'App',
   components: {
-    HelloWorld
+    TetrixMain
   }
 }
 </script>
