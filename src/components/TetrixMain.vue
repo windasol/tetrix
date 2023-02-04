@@ -1,13 +1,10 @@
 <template>
-  <body  @keydown.enter="keyRight">
+  <body>
     <div class="container">
       <div class="popup">
         게임종료
         <button class="restart">다시시작</button>
-      </div>
- 
-
-      
+      </div>       
       <di class="level_container">
         <p></p>
         <div class="level"></div>
@@ -17,8 +14,8 @@
         <div class="header">
           <p>score</p>
           <p class="score">0</p>
-        </div>
-        <table class="stage_container" >
+        </div>        
+        <table class="stage_container">
           <tbody class="stage">
             <tr v-for="(y, index) in 20" :key="`y-${index}`" :id="`${y},${x}`" style="background-color: green;">
               <td v-for="(x, index) in 10" :key="`x-${index}`" :id="`${y},${x}`" style="background-color:green;">
@@ -44,6 +41,7 @@ export default {
   },
   mounted() {
     this.init();    
+    window.addEventListener('keydown', this.keydownEvent);
   },
   data() {
     return {            
@@ -61,11 +59,11 @@ export default {
     // 블럭 생성
     async makeBlock() {            
 
-      if(this.count == 5) {
-        return 0;
-      }      
+      // if(this.count == 5) {
+      //   return 0;
+      // }      
       
-      let num = Math.floor(Math.random() * 5);               
+      let num = Math.floor(Math.random() * 7);               
       // let num = this.blocks[this.count];
       let block = ''; //eslint-disable-line no-unused-vars                  
       let color = this.colorSelect(num);            
@@ -75,17 +73,22 @@ export default {
           block = model[0][num][0][i].toString();  
           this.now.push(model[0][num][0][i]);         
           document.getElementById(block).style.backgroundColor = color; 
-      }                  
+      }         
+      
+
+      const stackMax = Math.max(...this.now.map(e => e[0]).flat());
+      let result = this.stackCheck(this.now.filter(e => e[0] == stackMax).map(e => [e[0] + 1, e[1]]));
+      if(result == "return") {        
+        return ;
+      }
                   
-      this.flag = true;
-      console.log(this.now);
+      this.flag = true;      
 
       while(this.flag == true) {
         await this.autoMove(this.now, color);                     
       }
                   
-      this.now = [];                  
-      this.count ++;                             
+      this.now = [];                                                
 
       return this.makeBlock()
 
@@ -102,7 +105,11 @@ export default {
         color = "red";
       } else if(num == 3) {
         color = "blue";          
-      }   
+      } else if(num == 4) {
+        color = "purple";
+      } else if(num == 5) {
+        color = "pink";
+      }
 
       return color;
     },
@@ -110,7 +117,7 @@ export default {
     async autoMove(now, color) {          
       
       // 떨어지는 시간 동기처리
-      await this.delay(10);
+      await this.delay(100);
                                                                                             
       const stackMax = Math.max(...this.now.map(e => e[0]).flat());       
       
@@ -159,9 +166,25 @@ export default {
       }           
       return "";
     },
-    keyRight() {
-      alert("sdfsdf");
-    },
+    keydownEvent(event) {
+      if(event.keyCode == 38) {
+        // alert("윗키");
+      } else if(event.keyCode == 37) {
+        if(this.now.filter(e=> e[1] == 1).length > 0) {
+            return;
+        }                
+        this.colorStack("green");
+        this.now = this.now.map(e => [e[0], e[1] - 1]);        
+      } else if(event.keyCode == 39) {
+        if(this.now.filter(e=> e[1] == 10).length > 0) {
+            return;
+        }                
+        this.colorStack("green");
+        this.now = this.now.map(e => [e[0], e[1] + 1]);               
+      } else if(event.keyCode == 40) {
+        // alert("아랫키");
+      }  
+    },    
   },
 }
 </script>
