@@ -76,8 +76,9 @@ export default {
       }         
       
 
-      const stackMax = Math.max(...this.now.map(e => e[0]).flat());
+      const stackMax = Math.max(...this.now.map(e => e[0]).flat());      
       let result = this.stackCheck(this.now.filter(e => e[0] == stackMax).map(e => [e[0] + 1, e[1]]));
+
       if(result == "return") {        
         return ;
       }
@@ -117,7 +118,7 @@ export default {
     async autoMove(now, color) {          
       
       // 떨어지는 시간 동기처리
-      await this.delay(100);
+      await this.delay(10);
                                                                                             
       const stackMax = Math.max(...this.now.map(e => e[0]).flat());       
       
@@ -125,6 +126,32 @@ export default {
         this.flag = false;
         return;
       }
+
+
+      let plus = this.now.map(e=> [e[0] + 1, e[1]]);
+      let dd = this.now.map(e=> [e[0], e[1]]);
+      // console.log(dd[1]);              
+      // console.log(plus[0]);    
+      // console.log(dd[1].equals(plus[0]));
+      console.log(JSON.stringify(plus[0] == JSON.stringify(dd[1])));
+      let ss = [];
+
+      // console.log(plus[0].includes(this.now[0]));
+
+      for(let i = 0; i < plus.length; i++) {
+        for(let j = 0; j < plus.length; j++) {
+          if(plus[i] == dd[j]) {
+            alert("sdfsd");
+            break;
+          }
+
+          if(j == 3) {
+            ss.push("sdfdsf : " + plus[i]);
+          }          
+        }
+      }
+      console.log(ss);
+      ss = [];
 
       //밑에 블럭이 있는지 계산
       let result = this.stackCheck(this.now.filter(e => e[0] == stackMax).map(e => [e[0] + 1, e[1]]));
