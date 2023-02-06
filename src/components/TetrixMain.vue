@@ -29,8 +29,6 @@
   </body>
 </template>
 
-
-
 <script>
 import TetrixModel from './TetrixModel/TetrixModel';
 
@@ -48,7 +46,12 @@ export default {
       now: [],                    
       flag: true,
       down: false,
-      time: 100,
+      time: 1000,
+      status: {
+        color: "",
+        inedx: 0,
+        change: 0,
+      },      
     };
   },
   methods: {
@@ -59,15 +62,18 @@ export default {
     async makeBlock() {            
       this.down = false;
 
-      let num = Math.floor(Math.random() * 7);               
+      // let num = Math.floor(Math.random() * 7);               
+      let num = 4;
       let block = ''; //eslint-disable-line no-unused-vars                  
-      let color = this.colorSelect(num);            
+      this.status.color = this.colorSelect(num);   
+      this.status.inedx = num;       
+      this.status.change = 0; 
 
       //랜덤으로 블럭 생성
       for(let i = 0; i < 4; i++) {                             
           block = model[0][num][0][i].toString();  
           this.now.push(model[0][num][0][i]);         
-          document.getElementById(block).style.backgroundColor = color; 
+          document.getElementById(block).style.backgroundColor = this.status.color; 
       }         
       
       // 밑에 블럭 있는지 체크
@@ -81,7 +87,7 @@ export default {
       this.flag = true;      
 
       while(this.flag == true) {
-        await this.autoMove(this.now, color);                     
+        await this.autoMove();                     
       }
                   
       this.now = [];                                                
@@ -110,7 +116,7 @@ export default {
       return color;
     },
     // 자동으로 움직이는함수
-    async autoMove(now, color) {          
+    async autoMove() {          
             
       // 떨어지는 시간 동기처리
       await this.delay(this.time);      
@@ -136,7 +142,7 @@ export default {
       this.colorStack("green");
       this.now = this.now.map(e=> [e[0] + 1, e[1]]);      
       // 블럭 쌓기
-      this.colorStack(color);
+      this.colorStack(this.status.color);
     },
     // 떨어지는 속도
     delay(ms) {      
@@ -147,7 +153,7 @@ export default {
       return new Promise(r => setTimeout(r,ms));
     }, 
     // 블럭 쌓기   
-    colorStack(color) {
+    colorStack(color) {      
       let block = '';      
       for(let i = 0; i < 4; i++) {                             
         block = this.now[i].toString();             
@@ -169,7 +175,7 @@ export default {
     },
     keydownEvent(event) {
       if(event.keyCode == 38) {
-
+          this.blockChange();
 
         // alert("윗키");
       } else if(event.keyCode == 37) {        
@@ -186,6 +192,7 @@ export default {
 
         this.colorStack("green");
         this.now = this.now.map(e => [e[0], e[1] - 1]);                
+        this.colorStack(this.status.color);        
       } else if(event.keyCode == 39) {        
         const stackMax = Math.max(...this.now.map(e => e[1]).flat());              
         if(stackMax == 10) {
@@ -198,7 +205,8 @@ export default {
           return;
         }            
         this.colorStack("green");
-        this.now = this.now.map(e => [e[0], e[1] + 1]);               
+        this.now = this.now.map(e => [e[0], e[1] + 1]);   
+        this.colorStack(this.status.color);                    
       } else if(event.keyCode == 40) {                
         this.down = true;
       }  
@@ -218,10 +226,306 @@ export default {
             compare.push(arr[i]);
           }          
         }
-      }     
-      
+      }           
       return compare;
-    }
+    },
+    blockChange() {      
+      const index = this.status.inedx;
+
+      // ㄴ자
+      if(index == 1) {
+        this.change1();
+      // ㅣ자
+      } else if(index == 2) {
+        this.change2();
+      // ㅗ자
+      } else if(index == 3) {
+        this.change3();
+      // 반대 ㄴ자
+      } else if(index == 4) {
+        this.change4();
+      }
+
+                     
+    },
+    change1() {      
+      this.status.change = this.status.change + 1;
+      let idx = this.status.change;
+
+      if(idx%4 == 1) {
+        this.colorStack("green");
+        let ss = [];
+        
+        const topMin = Math.min(...this.now.map(e => e[0]).flat());
+        const rightMax = Math.max(...this.now.map(e => e[1]).flat());
+
+        this.now.filter((e) => {          
+          if(e[1] == rightMax) {              
+            ss.push([e[0] - 1, e[1] - 1]);
+          } else if(e[0] == topMin){
+            ss.push([e[0] - 1, e[1] + 1]);
+          } else {
+            ss.push([e[0], e[1]]);
+          }            
+        });      
+        
+        this.now = ss;    
+        this.colorStack(this.status.color);
+      } else if(idx%4 == 2) {        
+        this.colorStack("green");
+        let ss = [];
+        
+        const topMin = Math.min(...this.now.map(e => e[0]).flat());
+        const leftMin = Math.min(...this.now.map(e => e[1]).flat());
+
+        this.now.filter((e) => {          
+          if(e[0] == topMin) {              
+            ss.push([e[0] + 1, e[1] - 1]);
+          } else if(e[1] == leftMin){
+            ss.push([e[0] - 1, e[1] - 1]);
+          } else {
+            ss.push([e[0], e[1]]);
+          }            
+        });      
+        
+        this.now = ss;    
+        this.colorStack(this.status.color);
+      } else if(idx%4 == 3) {        
+        this.colorStack("green");
+        let ss = [];
+        
+        const topMax = Math.max(...this.now.map(e => e[0]).flat());
+        const leftMin = Math.min(...this.now.map(e => e[1]).flat());
+
+        this.now.filter((e) => {          
+          if(e[0] == topMax) {              
+            ss.push([e[0] + 1, e[1] - 1]);
+          } else if(e[1] == leftMin){
+            ss.push([e[0] + 1, e[1] + 1]);
+          } else {
+            ss.push([e[0], e[1]]);
+          }            
+        });      
+        
+        this.now = ss;    
+        this.colorStack(this.status.color);
+      } else if(idx%4 == 0) {        
+        this.colorStack("green");
+        let ss = [];
+        
+        const topMax = Math.max(...this.now.map(e => e[0]).flat());
+        const rightMax = Math.max(...this.now.map(e => e[1]).flat());
+
+        this.now.filter((e) => {          
+          if(e[0] == topMax) {              
+            ss.push([e[0] - 1, e[1] + 1]);
+          } else if(e[1] == rightMax){
+            ss.push([e[0] + 1, e[1] + 1]);
+          } else {
+            ss.push([e[0], e[1]]);
+          }            
+        });      
+        
+        this.now = ss;    
+        this.colorStack(this.status.color);
+      } 
+    },
+    change2() {
+      this.status.change = this.status.change + 1;
+      let idx = this.status.change;
+
+      if(idx%2 == 1) {
+        this.colorStack("green");
+        let ss = [];
+        
+        const topMax = Math.max(...this.now.map(e => e[0]).flat());
+        const topMin = Math.min(...this.now.map(e => e[0]).flat());
+        const beforeTopMax = topMax-1;
+
+        this.now.filter((e) => {          
+          if(e[0] == topMax) {              
+            ss.push([e[0] - 2, e[1] + 1]);
+          } else if(e[0] == topMin){
+            ss.push([e[0] + 1, e[1] - 1]);
+          } else if (e[0] == beforeTopMax){
+            ss.push([e[0] - 1, e[1] + 2]);
+          } else {
+            ss.push([e[0], e[1]]);
+          }           
+        });      
+        
+        this.now = ss;    
+        this.colorStack(this.status.color);
+      } else  if(idx%2 == 0) {        
+        this.colorStack("green");
+        let ss = [];
+        
+        const leftmin = Math.min(...this.now.map(e => e[1]).flat());
+        const rightMax = Math.max(...this.now.map(e => e[1]).flat());
+        const beforeRightMax = rightMax -1;
+
+        this.now.filter((e) => {          
+          if(e[1] == leftmin) {              
+            ss.push([e[0] - 1, e[1] + 1]);
+          } else if(e[1] == rightMax){
+            ss.push([e[0] + 2, e[1] - 2]);
+          } else if (e[1] == beforeRightMax){
+            ss.push([e[0] + 1, e[1] - 1]);
+          } else {
+            ss.push([e[0], e[1]]);
+          }           
+        });      
+        
+        this.now = ss;    
+        this.colorStack(this.status.color);
+      }
+    },
+    change3() {            
+      this.status.change = this.status.change + 1;
+         
+      let idx = this.status.change;
+      if(idx%4 == 1) {
+        this.colorStack("green");
+        let ss = [];
+        
+        const stackMax = Math.max(...this.now.map(e => e[1]).flat());
+        this.now.filter((e) => {          
+        if(e[1] == stackMax) {              
+          ss.push([e[0] + 1, e[1] - 1]);
+        } else {
+          ss.push([e[0], e[1]]);
+        }            
+        });      
+        
+        this.now = ss;    
+        this.colorStack(this.status.color);
+      } else if(idx%4 == 2) {
+        this.colorStack("green");
+        let ss = [];
+
+        const stackMin = Math.min(...this.now.map(e => e[0]).flat());
+        this.now.filter((e) => {          
+        if(e[0] == stackMin) {              
+          ss.push([e[0] + 1, e[1] + 1]);
+        } else {
+          ss.push([e[0], e[1]]);
+        }            
+        });      
+        
+        this.now = ss;    
+        this.colorStack(this.status.color);
+      } else if(idx%4 == 3) {        
+        this.colorStack("green");
+        let ss = [];
+        
+        const stackMin = Math.min(...this.now.map(e => e[1]).flat());
+        this.now.filter((e) => {          
+          if(e[1] == stackMin) {              
+            ss.push([e[0] - 1, e[1] + 1]);
+          } else {
+            ss.push([e[0], e[1]]);
+          }            
+        });      
+        this.now = ss;    
+        this.colorStack(this.status.color);
+      } else if(idx%4 == 0){
+        this.colorStack("green");
+        let ss = [];
+        
+        const stackMax = Math.max(...this.now.map(e => e[0]).flat());
+        this.now.filter((e) => {          
+          if(e[0] == stackMax) {              
+            ss.push([e[0] - 1, e[1] - 1]);
+          } else {
+            ss.push([e[0], e[1]]);
+          }            
+        });     
+        this.now = ss;    
+        this.colorStack(this.status.color); 
+      }              
+    },
+    change4() {
+      this.status.change = this.status.change + 1;
+         
+      let idx = this.status.change;
+      if(idx%4 == 1) {        
+        this.colorStack("green");
+        let ss = [];
+        
+        const leftMin = Math.min(...this.now.map(e => e[1]).flat());
+        const topMin = Math.min(...this.now.map(e => e[0]).flat());
+
+        this.now.filter((e) => {          
+        if(e[1] == leftMin) {              
+          ss.push([e[0] - 1, e[1] + 1]);
+        } else if(e[0] == topMin){
+          ss.push([e[0] - 1, e[1] - 1]);
+        } else {
+          ss.push([e[0], e[1]]);
+        }            
+        });      
+        
+        this.now = ss;    
+        this.colorStack(this.status.color);
+      } else if(idx%4 == 2) {        
+        this.colorStack("green");
+        let ss = [];
+        
+        const topMin = Math.min(...this.now.map(e => e[0]).flat());
+        const rightMax = Math.max(...this.now.map(e => e[1]).flat());
+
+        this.now.filter((e) => {          
+        if(e[0] == topMin) {              
+          ss.push([e[0] + 1, e[1] + 1]);
+        } else if(e[1] == rightMax){
+          ss.push([e[0] - 1, e[1] + 1]);
+        } else {
+          ss.push([e[0], e[1]]);
+        }            
+        });      
+        
+        this.now = ss;    
+        this.colorStack(this.status.color);
+      } else if(idx%4 == 3) {        
+        this.colorStack("green");
+        let ss = [];
+        
+        const topMax = Math.max(...this.now.map(e => e[0]).flat());
+        const rightMax = Math.max(...this.now.map(e => e[1]).flat());
+
+        this.now.filter((e) => {          
+        if(e[0] == topMax) {              
+          ss.push([e[0] + 1, e[1] + 1]);
+        } else if(e[1] == rightMax){
+          ss.push([e[0] + 1, e[1] - 1]);
+        } else {
+          ss.push([e[0], e[1]]);
+        }            
+        });      
+        
+        this.now = ss;    
+        this.colorStack(this.status.color);
+      } else if(idx%4 == 0) {        
+        this.colorStack("green");
+        let ss = [];
+        
+        const topMax = Math.max(...this.now.map(e => e[0]).flat());
+        const leftMin = Math.min(...this.now.map(e => e[1]).flat());
+
+        this.now.filter((e) => {          
+        if(e[0] == topMax) {              
+          ss.push([e[0] - 1, e[1] - 1]);
+        } else if(e[1] == leftMin){
+          ss.push([e[0] + 1, e[1] - 1]);
+        } else {
+          ss.push([e[0], e[1]]);
+        }            
+        });      
+        
+        this.now = ss;    
+        this.colorStack(this.status.color);
+      }
+    },
   },
 }
 </script>
