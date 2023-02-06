@@ -50,7 +50,7 @@ export default {
       status: {
         color: "",
         inedx: 0,
-        change: 0,
+        change: 1,
       },      
     };
   },
@@ -63,11 +63,11 @@ export default {
       this.down = false;
 
       // let num = Math.floor(Math.random() * 7);               
-      let num = 4;
+      let num = 2;
       let block = ''; //eslint-disable-line no-unused-vars                  
       this.status.color = this.colorSelect(num);   
       this.status.inedx = num;       
-      this.status.change = 0; 
+      this.status.change = 1; 
 
       //랜덤으로 블럭 생성
       for(let i = 0; i < 4; i++) {                             
@@ -160,6 +160,29 @@ export default {
         document.getElementById(block).style.backgroundColor = color; 
       }   
     },    
+    outCheck(check) {  
+      let newCheck = [];
+      check.filter((e=> {
+        if(e[0] == 0) {
+          newCheck = check.map(e=> [e[0] + 1, e[1]]);
+        } else if(e[0] == 20) {
+          newCheck = check.map(e=> [e[0] - 1, e[1]]);
+        } else if(e[1] == 0) {
+          newCheck = check.map(e=> [e[0], e[1] + 1]);
+        } else if(e[1] == 10) {
+          newCheck = check.map(e=> [e[0] , e[1] - 1]);
+        }                    
+      }));
+      console.log(check);
+      console.log(newCheck);
+
+
+      if(check.length > 0) {
+        return newCheck;
+      }
+
+      return check;
+    },
     // 블럭있는지 체크
     stackCheck(check) {                       
       let block = '';                  
@@ -244,286 +267,401 @@ export default {
       // 반대 ㄴ자
       } else if(index == 4) {
         this.change4();
+      // z자
+      } else if(index == 5) {      
+        this.change5();
+      // z 반대  
+      } else if(index == 6) {
+        this.change6();
       }
 
                      
     },
-    change1() {      
-      this.status.change = this.status.change + 1;
+    change1() {            
       let idx = this.status.change;
 
-      if(idx%4 == 1) {
-        this.colorStack("green");
-        let ss = [];
+      if(idx%4 == 1) {        
+        let changeArr = [];
         
         const topMin = Math.min(...this.now.map(e => e[0]).flat());
         const rightMax = Math.max(...this.now.map(e => e[1]).flat());
+        const leftMin = Math.min(...this.now.map(e => e[1]).flat());
 
         this.now.filter((e) => {          
           if(e[1] == rightMax) {              
-            ss.push([e[0] - 1, e[1] - 1]);
+            changeArr.push([e[0] + 1, e[1] - 1]);
           } else if(e[0] == topMin){
-            ss.push([e[0] - 1, e[1] + 1]);
-          } else {
-            ss.push([e[0], e[1]]);
-          }            
-        });      
-        
-        this.now = ss;    
-        this.colorStack(this.status.color);
-      } else if(idx%4 == 2) {        
-        this.colorStack("green");
-        let ss = [];
-        
-        const topMin = Math.min(...this.now.map(e => e[0]).flat());
-        const leftMin = Math.min(...this.now.map(e => e[1]).flat());
-
-        this.now.filter((e) => {          
-          if(e[0] == topMin) {              
-            ss.push([e[0] + 1, e[1] - 1]);
+            changeArr.push([e[0], e[1] + 1]);
           } else if(e[1] == leftMin){
-            ss.push([e[0] - 1, e[1] - 1]);
+            changeArr.push([e[0] + 1, e[1]]);
           } else {
-            ss.push([e[0], e[1]]);
-          }            
-        });      
-        
-        this.now = ss;    
-        this.colorStack(this.status.color);
-      } else if(idx%4 == 3) {        
+            changeArr.push([e[0], e[1]]);
+          }      
+        });                           
+
         this.colorStack("green");
-        let ss = [];
+        this.now = changeArr  
+        this.colorStack(this.status.color);
+        this.status.change = this.status.change + 1;        
+      } else if(idx%4 == 2) {                
+        let changeArr = [];
         
         const topMax = Math.max(...this.now.map(e => e[0]).flat());
         const leftMin = Math.min(...this.now.map(e => e[1]).flat());
+        const rightMax = Math.max(...this.now.map(e => e[1]).flat());
 
         this.now.filter((e) => {          
-          if(e[0] == topMax) {              
-            ss.push([e[0] + 1, e[1] - 1]);
-          } else if(e[1] == leftMin){
-            ss.push([e[0] + 1, e[1] + 1]);
+          if(e[1] == leftMin) {              
+            changeArr.push([e[0] - 2, e[1]]);
+          } else if(e[0] == topMax && e[1] == rightMax){
+            changeArr.push([e[0] - 1, e[1] + 1]);
+          } else if(e[0] == topMax - 1 && e[1] == rightMax) {
+            changeArr.push([e[0] - 1, e[1] + 1]);
           } else {
-            ss.push([e[0], e[1]]);
+            changeArr.push([e[0], e[1]]);
           }            
-        });      
-        
-        this.now = ss;    
-        this.colorStack(this.status.color);
-      } else if(idx%4 == 0) {        
+        });                      
+
         this.colorStack("green");
-        let ss = [];
+        this.now = changeArr  
+        this.colorStack(this.status.color);
+        this.status.change = this.status.change + 1;
+      } else if(idx%4 == 3) {                
+        let changeArr = [];
         
         const topMax = Math.max(...this.now.map(e => e[0]).flat());
         const rightMax = Math.max(...this.now.map(e => e[1]).flat());
 
         this.now.filter((e) => {          
           if(e[0] == topMax) {              
-            ss.push([e[0] - 1, e[1] + 1]);
+            changeArr.push([e[0], e[1] - 2]);
           } else if(e[1] == rightMax){
-            ss.push([e[0] + 1, e[1] + 1]);
+            changeArr.push([e[0] + 2, e[1] - 2]);
           } else {
-            ss.push([e[0], e[1]]);
+            changeArr.push([e[0], e[1]]);
           }            
-        });      
-        
-        this.now = ss;    
-        this.colorStack(this.status.color);
-      } 
-    },
-    change2() {
-      this.status.change = this.status.change + 1;
-      let idx = this.status.change;
+        });                      
 
-      if(idx%2 == 1) {
         this.colorStack("green");
-        let ss = [];
+        this.now = changeArr  
+        this.colorStack(this.status.color);
+        this.status.change = this.status.change + 1;
+      } else if(idx%4 == 0) {                
+        let changeArr = [];
         
         const topMax = Math.max(...this.now.map(e => e[0]).flat());
-        const topMin = Math.min(...this.now.map(e => e[0]).flat());
-        const beforeTopMax = topMax-1;
+        const rightMax = Math.max(...this.now.map(e => e[1]).flat());
 
         this.now.filter((e) => {          
           if(e[0] == topMax) {              
-            ss.push([e[0] - 2, e[1] + 1]);
-          } else if(e[0] == topMin){
-            ss.push([e[0] + 1, e[1] - 1]);
-          } else if (e[0] == beforeTopMax){
-            ss.push([e[0] - 1, e[1] + 2]);
+            changeArr.push([e[0] - 1, e[1] + 2]);
+          } else if(e[1] == rightMax){
+            changeArr.push([e[0] + 1, e[1]]);
           } else {
-            ss.push([e[0], e[1]]);
+            changeArr.push([e[0], e[1]]);
+          }            
+        });                      
+
+        this.colorStack("green");
+        this.now = changeArr  
+        this.colorStack(this.status.color);
+        this.status.change = this.status.change + 1;
+      } 
+    },
+    change2() {      
+      let idx = this.status.change;
+
+      if(idx%2 == 1) {        
+        let changeArr = [];
+        
+        const topMax = Math.max(...this.now.map(e => e[0]).flat());
+
+        this.now.filter((e) => {          
+          if(e[0] == topMax) {              
+            changeArr.push([e[0] - 3, e[1] - 1]);
+          } else if(e[0] == topMax - 1){
+            changeArr.push([e[0] - 2, e[1] + 1]);
+          } else if (e[0] == topMax - 2){
+            changeArr.push([e[0] - 1, e[1] + 2]);
+          } else {
+            changeArr.push([e[0], e[1]]);
           }           
         });      
         
-        this.now = ss;    
-        this.colorStack(this.status.color);
-      } else  if(idx%2 == 0) {        
         this.colorStack("green");
-        let ss = [];
+        this.now = changeArr;    
+        this.colorStack(this.status.color);
+        this.status.change = this.status.change + 1;
+      } else  if(idx%2 == 0) {                
+        let changeArr = [];
         
         const leftmin = Math.min(...this.now.map(e => e[1]).flat());
-        const rightMax = Math.max(...this.now.map(e => e[1]).flat());
-        const beforeRightMax = rightMax -1;
+        const rightMax = Math.max(...this.now.map(e => e[1]).flat());        
 
         this.now.filter((e) => {          
           if(e[1] == leftmin) {              
-            ss.push([e[0] - 1, e[1] + 1]);
+            changeArr.push([e[0] + 1, e[1] + 1]);
           } else if(e[1] == rightMax){
-            ss.push([e[0] + 2, e[1] - 2]);
-          } else if (e[1] == beforeRightMax){
-            ss.push([e[0] + 1, e[1] - 1]);
+            changeArr.push([e[0] + 2, e[1] - 2]);
+          } else if (e[1] == rightMax - 1){
+            changeArr.push([e[0] + 3, e[1] - 1]);
           } else {
-            ss.push([e[0], e[1]]);
+            changeArr.push([e[0], e[1]]);
           }           
         });      
         
-        this.now = ss;    
+        this.colorStack("green");
+        this.now = changeArr;    
         this.colorStack(this.status.color);
+        this.status.change = this.status.change + 1;
       }
     },
-    change3() {            
-      this.status.change = this.status.change + 1;
-         
+    change3() {                           
       let idx = this.status.change;
-      if(idx%4 == 1) {
-        this.colorStack("green");
-        let ss = [];
+      if(idx%4 == 1) {        
+        let changeArr = [];
         
-        const stackMax = Math.max(...this.now.map(e => e[1]).flat());
+        const rightMax = Math.max(...this.now.map(e => e[1]).flat());
         this.now.filter((e) => {          
-        if(e[1] == stackMax) {              
-          ss.push([e[0] + 1, e[1] - 1]);
+        if(e[1] == rightMax) {              
+          changeArr.push([e[0] + 1, e[1] - 1]);
         } else {
-          ss.push([e[0], e[1]]);
+          changeArr.push([e[0], e[1]]);
         }            
         });      
         
-        this.now = ss;    
-        this.colorStack(this.status.color);
-      } else if(idx%4 == 2) {
         this.colorStack("green");
-        let ss = [];
+        this.now = changeArr;    
+        this.colorStack(this.status.color);
+        this.status.change = this.status.change + 1;
+      } else if(idx%4 == 2) {        
+        let changeArr = [];
 
         const stackMin = Math.min(...this.now.map(e => e[0]).flat());
         this.now.filter((e) => {          
         if(e[0] == stackMin) {              
-          ss.push([e[0] + 1, e[1] + 1]);
+          changeArr.push([e[0] + 1, e[1] + 1]);
         } else {
-          ss.push([e[0], e[1]]);
+          changeArr.push([e[0], e[1]]);
         }            
         });      
         
-        this.now = ss;    
-        this.colorStack(this.status.color);
-      } else if(idx%4 == 3) {        
         this.colorStack("green");
-        let ss = [];
+        this.now = changeArr;    
+        this.colorStack(this.status.color);
+        this.status.change = this.status.change + 1;
+      } else if(idx%4 == 3) {                
+        let changeArr = [];
         
         const stackMin = Math.min(...this.now.map(e => e[1]).flat());
         this.now.filter((e) => {          
           if(e[1] == stackMin) {              
-            ss.push([e[0] - 1, e[1] + 1]);
+            changeArr.push([e[0] - 1, e[1] + 1]);
           } else {
-            ss.push([e[0], e[1]]);
+            changeArr.push([e[0], e[1]]);
           }            
         });      
-        this.now = ss;    
-        this.colorStack(this.status.color);
-      } else if(idx%4 == 0){
+
         this.colorStack("green");
-        let ss = [];
+        this.now = changeArr;    
+        this.colorStack(this.status.color);
+        this.status.change = this.status.change + 1;
+      } else if(idx%4 == 0){        
+        let changeArr = [];
         
         const stackMax = Math.max(...this.now.map(e => e[0]).flat());
         this.now.filter((e) => {          
           if(e[0] == stackMax) {              
-            ss.push([e[0] - 1, e[1] - 1]);
+            changeArr.push([e[0] - 1, e[1] - 1]);
           } else {
-            ss.push([e[0], e[1]]);
+            changeArr.push([e[0], e[1]]);
           }            
         });     
-        this.now = ss;    
+
+        this.colorStack("green");
+        this.now = changeArr;    
         this.colorStack(this.status.color); 
+        this.status.change = this.status.change + 1;
       }              
     },
-    change4() {
-      this.status.change = this.status.change + 1;
-         
+    change4() {               
       let idx = this.status.change;
-      if(idx%4 == 1) {        
-        this.colorStack("green");
-        let ss = [];
+      if(idx%4 == 1) {                
+        let changeArr = [];
         
+        const rightMax = Math.max(...this.now.map(e => e[1]).flat());
         const leftMin = Math.min(...this.now.map(e => e[1]).flat());
         const topMin = Math.min(...this.now.map(e => e[0]).flat());
-
-        this.now.filter((e) => {          
-        if(e[1] == leftMin) {              
-          ss.push([e[0] - 1, e[1] + 1]);
-        } else if(e[0] == topMin){
-          ss.push([e[0] - 1, e[1] - 1]);
-        } else {
-          ss.push([e[0], e[1]]);
-        }            
-        });      
-        
-        this.now = ss;    
-        this.colorStack(this.status.color);
-      } else if(idx%4 == 2) {        
-        this.colorStack("green");
-        let ss = [];
-        
-        const topMin = Math.min(...this.now.map(e => e[0]).flat());
-        const rightMax = Math.max(...this.now.map(e => e[1]).flat());
 
         this.now.filter((e) => {          
         if(e[0] == topMin) {              
-          ss.push([e[0] + 1, e[1] + 1]);
+          changeArr.push([e[0], e[1] - 1]);
         } else if(e[1] == rightMax){
-          ss.push([e[0] - 1, e[1] + 1]);
+          changeArr.push([e[0] + 1, e[1]]);
+        } else if(e[1] == leftMin) {
+          changeArr.push([e[0] + 1, e[1] + 1]);
         } else {
-          ss.push([e[0], e[1]]);
+          changeArr.push([e[0], e[1]]);
         }            
         });      
         
-        this.now = ss;    
-        this.colorStack(this.status.color);
-      } else if(idx%4 == 3) {        
         this.colorStack("green");
-        let ss = [];
+        this.now = changeArr;    
+        this.colorStack(this.status.color);
+        this.status.change = this.status.change + 1;
+      } else if(idx%4 == 2) {                
+        let changeArr = [];
         
         const topMax = Math.max(...this.now.map(e => e[0]).flat());
         const rightMax = Math.max(...this.now.map(e => e[1]).flat());
 
         this.now.filter((e) => {          
-        if(e[0] == topMax) {              
-          ss.push([e[0] + 1, e[1] + 1]);
-        } else if(e[1] == rightMax){
-          ss.push([e[0] + 1, e[1] - 1]);
-        } else {
-          ss.push([e[0], e[1]]);
-        }            
+          if(e[0] == topMax && e[1] == rightMax -1) {              
+            changeArr.push([e[0] - 1, e[1] - 1]);
+          } else if(e[1] == rightMax){
+            changeArr.push([e[0] - 2, e[1]]);
+          } else if(e[0] == topMax - 1) { 
+            changeArr.push([e[0] - 1, e[1] - 1]);
+          } else {
+            changeArr.push([e[0], e[1]]);
+          }            
         });      
         
-        this.now = ss;    
-        this.colorStack(this.status.color);
-      } else if(idx%4 == 0) {        
         this.colorStack("green");
-        let ss = [];
+        this.now = changeArr;    
+        this.colorStack(this.status.color);
+        this.status.change = this.status.change + 1;
+      } else if(idx%4 == 3) {                
+        let changeArr = [];
         
         const topMax = Math.max(...this.now.map(e => e[0]).flat());
         const leftMin = Math.min(...this.now.map(e => e[1]).flat());
 
         this.now.filter((e) => {          
         if(e[0] == topMax) {              
-          ss.push([e[0] - 1, e[1] - 1]);
+          changeArr.push([e[0] , e[1] + 2]);
         } else if(e[1] == leftMin){
-          ss.push([e[0] + 1, e[1] - 1]);
+          changeArr.push([e[0] + 2, e[1] + 2]);
         } else {
-          ss.push([e[0], e[1]]);
+          changeArr.push([e[0], e[1]]);
         }            
         });      
         
-        this.now = ss;    
+        this.colorStack("green");
+        this.now = changeArr;    
         this.colorStack(this.status.color);
+        this.status.change = this.status.change + 1;
+      } else if(idx%4 == 0) {                
+        let changeArr = [];
+        
+        const topMax = Math.max(...this.now.map(e => e[0]).flat());
+        const leftMin = Math.min(...this.now.map(e => e[1]).flat());
+
+        this.now.filter((e) => {          
+        if(e[0] == topMax) {              
+          changeArr.push([e[0] - 1, e[1] - 1]);
+        } else if(e[1] == leftMin){
+          changeArr.push([e[0] + 1, e[1] - 1]);
+        } else {
+          changeArr.push([e[0], e[1]]);
+        }            
+        });      
+        
+        this.colorStack("green");
+        this.now = changeArr;    
+        this.colorStack(this.status.color);
+        this.status.change = this.status.change + 1;
+      }
+    },
+    change5() {            
+      let idx = this.status.change;
+
+      if(idx%2 == 1) {                
+        let changeArr = [];
+        
+
+        const topMin = Math.min(...this.now.map(e => e[0]).flat());
+        const leftMin = Math.min(...this.now.map(e => e[1]).flat());        
+
+        this.now.filter((e) => {          
+          if(e[0] == topMin && e[1] == leftMin) {    
+            changeArr.push([e[0] + 2, e[1] + 1]);
+          } else if(e[0] == topMin && e[1] == leftMin + 1) {
+            changeArr.push([e[0], e[1] + 1]);
+          } else {
+            changeArr.push([e[0], e[1]]);
+          }            
+        });      
+        
+        this.colorStack("green");
+        this.now = changeArr;    
+        this.colorStack(this.status.color);
+        this.status.change = this.status.change + 1;   
+      } else  if(idx%2 == 0) {                
+        let changeArr = [];
+        
+        const topMax = Math.max(...this.now.map(e => e[0]).flat());
+        const topMin = Math.min(...this.now.map(e => e[0]).flat());
+
+        this.now.filter((e) => {          
+          if(e[0] == topMax) {              
+            changeArr.push([e[0] - 2, e[1] - 1]);            
+          } else if(e[0] == topMin){
+            changeArr.push([e[0] , e[1] - 1]);            
+          } else {
+            changeArr.push([e[0], e[1]]);
+          }            
+        });      
+        
+        this.colorStack("green");
+        this.now = changeArr;    
+        this.colorStack(this.status.color);
+        this.status.change = this.status.change + 1;   
+      }
+    },
+    change6() {            
+      let idx = this.status.change;
+
+      if(idx%2 == 1) {                
+        let changeArr = [];
+        
+        const topMin = Math.min(...this.now.map(e => e[0]).flat());
+        const rightMax = Math.max(...this.now.map(e => e[1]).flat());        
+
+        this.now.filter((e) => {          
+          if(e[0] == topMin && e[1] == rightMax) {    
+            changeArr.push([e[0] + 2, e[1] - 1]);
+          } else if(e[0] == topMin && e[1] == rightMax - 1) {
+            changeArr.push([e[0], e[1] - 1]);
+          } else {
+            changeArr.push([e[0], e[1]]);
+          }            
+        });      
+        
+        this.colorStack("green");
+        this.now = changeArr;    
+        this.colorStack(this.status.color);
+        this.status.change = this.status.change + 1;   
+      } else  if(idx%2 == 0) {                
+        let changeArr = [];
+        
+        const topMax = Math.max(...this.now.map(e => e[0]).flat());
+        const topMin = Math.min(...this.now.map(e => e[0]).flat());
+
+        this.now.filter((e) => {          
+          if(e[0] == topMax) {              
+            changeArr.push([e[0] - 2, e[1] + 1]);            
+          } else if(e[0] == topMin){
+            changeArr.push([e[0] , e[1] + 1]);            
+          } else {
+            changeArr.push([e[0], e[1]]);
+          }            
+        });      
+        
+        this.colorStack("green");
+        this.now = changeArr;    
+        this.colorStack(this.status.color);
+        this.status.change = this.status.change + 1;   
       }
     },
   },
