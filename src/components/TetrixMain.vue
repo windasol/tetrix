@@ -43,9 +43,9 @@ export default {
   },
   data() {
     return {            
-      now: [],                    
-      flag: true,
-      down: false,
+      now: [],
+      total: [],
+      flag: true,      
       time: 1000,
       status: {
         color: "",
@@ -59,11 +59,10 @@ export default {
       this.makeBlock();
     },
     // 블럭 생성
-    async makeBlock() {            
-      this.down = false;
+    async makeBlock() {                  
 
-      // let num = Math.floor(Math.random() * 7);               
-      let num = 2;
+      let num = Math.floor(Math.random() * 7);               
+      // let num = 1;
       let block = ''; //eslint-disable-line no-unused-vars                  
       this.status.color = this.colorSelect(num);   
       this.status.inedx = num;       
@@ -88,9 +87,15 @@ export default {
 
       while(this.flag == true) {
         await this.autoMove();                     
-      }
-                  
-      this.now = [];                                                
+      }                        
+            
+      this.now.forEach((e) =>{      
+        this.total.push([e[0], e[1], this.status.color]);
+      });            
+
+      await this.scoreCheck();            
+      
+      this.now = [];  
 
       return this.makeBlock()
 
@@ -146,10 +151,7 @@ export default {
     },
     // 떨어지는 속도
     delay(ms) {      
-      if(this.down) {
-        ms = 0;        
-      }
-      
+            
       return new Promise(r => setTimeout(r,ms));
     }, 
     // 블럭 쌓기   
@@ -157,27 +159,24 @@ export default {
       let block = '';      
       for(let i = 0; i < 4; i++) {                             
         block = this.now[i].toString();             
-        document.getElementById(block).style.backgroundColor = color; 
+        document.getElementById(block).style.backgroundColor = color;         
       }   
     },    
     outCheck(check) {  
-      let newCheck = [];
+      let newCheck = [];      
       check.filter((e=> {
-        if(e[0] == 0) {
-          newCheck = check.map(e=> [e[0] + 1, e[1]]);
-        } else if(e[0] == 20) {
-          newCheck = check.map(e=> [e[0] - 1, e[1]]);
-        } else if(e[1] == 0) {
+        if(e[0] > 20) {
+          let cal = e[0] - 20;
+          newCheck = check.map(e=> [e[0] - cal, e[1]]);
+        } else if(e[1] > 10) {
+          let cal = e[1] - 10;          
+          newCheck = check.map(e=> [e[0], e[1] - cal]);
+        } else if(e[1] == 0)  {                    
           newCheck = check.map(e=> [e[0], e[1] + 1]);
-        } else if(e[1] == 10) {
-          newCheck = check.map(e=> [e[0] , e[1] - 1]);
-        }                    
-      }));
-      console.log(check);
-      console.log(newCheck);
+        }
+      }));      
 
-
-      if(check.length > 0) {
+      if(newCheck.length > 0) {
         return newCheck;
       }
 
@@ -230,8 +229,24 @@ export default {
         this.colorStack("green");
         this.now = this.now.map(e => [e[0], e[1] + 1]);   
         this.colorStack(this.status.color);                    
-      } else if(event.keyCode == 40) {                
-        this.down = true;
+      } else if(event.keyCode == 40) {      
+        const stackMax = Math.max(...this.now.map(e => e[0]).flat());       
+      
+        if(stackMax == 20) {          
+          this.flag = false;
+          return;
+        }    
+        
+        const check = this.blockLimitArr(this.now.map(e=> [e[0] + 1, e[1]]));
+        const result = this.stackCheck(check);   
+
+        if(result == "return") {
+          return;
+        }
+
+        this.colorStack("green");
+        this.now = this.now.map(e => [e[0] + 1, e[1]]);   
+        this.colorStack(this.status.color);                                          
       }  
     },
     // 
@@ -297,12 +312,9 @@ export default {
           } else {
             changeArr.push([e[0], e[1]]);
           }      
-        });                           
-
-        this.colorStack("green");
-        this.now = changeArr  
-        this.colorStack(this.status.color);
-        this.status.change = this.status.change + 1;        
+        });      
+                                
+        this.changeStack(changeArr);
       } else if(idx%4 == 2) {                
         let changeArr = [];
         
@@ -322,10 +334,7 @@ export default {
           }            
         });                      
 
-        this.colorStack("green");
-        this.now = changeArr  
-        this.colorStack(this.status.color);
-        this.status.change = this.status.change + 1;
+        this.changeStack(changeArr);
       } else if(idx%4 == 3) {                
         let changeArr = [];
         
@@ -342,10 +351,7 @@ export default {
           }            
         });                      
 
-        this.colorStack("green");
-        this.now = changeArr  
-        this.colorStack(this.status.color);
-        this.status.change = this.status.change + 1;
+        this.changeStack(changeArr);
       } else if(idx%4 == 0) {                
         let changeArr = [];
         
@@ -362,10 +368,7 @@ export default {
           }            
         });                      
 
-        this.colorStack("green");
-        this.now = changeArr  
-        this.colorStack(this.status.color);
-        this.status.change = this.status.change + 1;
+        this.changeStack(changeArr);
       } 
     },
     change2() {      
@@ -388,10 +391,7 @@ export default {
           }           
         });      
         
-        this.colorStack("green");
-        this.now = changeArr;    
-        this.colorStack(this.status.color);
-        this.status.change = this.status.change + 1;
+        this.changeStack(changeArr);
       } else  if(idx%2 == 0) {                
         let changeArr = [];
         
@@ -410,10 +410,7 @@ export default {
           }           
         });      
         
-        this.colorStack("green");
-        this.now = changeArr;    
-        this.colorStack(this.status.color);
-        this.status.change = this.status.change + 1;
+        this.changeStack(changeArr);
       }
     },
     change3() {                           
@@ -430,10 +427,7 @@ export default {
         }            
         });      
         
-        this.colorStack("green");
-        this.now = changeArr;    
-        this.colorStack(this.status.color);
-        this.status.change = this.status.change + 1;
+        this.changeStack(changeArr);
       } else if(idx%4 == 2) {        
         let changeArr = [];
 
@@ -446,10 +440,7 @@ export default {
         }            
         });      
         
-        this.colorStack("green");
-        this.now = changeArr;    
-        this.colorStack(this.status.color);
-        this.status.change = this.status.change + 1;
+        this.changeStack(changeArr);
       } else if(idx%4 == 3) {                
         let changeArr = [];
         
@@ -462,10 +453,7 @@ export default {
           }            
         });      
 
-        this.colorStack("green");
-        this.now = changeArr;    
-        this.colorStack(this.status.color);
-        this.status.change = this.status.change + 1;
+        this.changeStack(changeArr);
       } else if(idx%4 == 0){        
         let changeArr = [];
         
@@ -478,10 +466,7 @@ export default {
           }            
         });     
 
-        this.colorStack("green");
-        this.now = changeArr;    
-        this.colorStack(this.status.color); 
-        this.status.change = this.status.change + 1;
+        this.changeStack(changeArr);
       }              
     },
     change4() {               
@@ -505,10 +490,7 @@ export default {
         }            
         });      
         
-        this.colorStack("green");
-        this.now = changeArr;    
-        this.colorStack(this.status.color);
-        this.status.change = this.status.change + 1;
+        this.changeStack(changeArr);
       } else if(idx%4 == 2) {                
         let changeArr = [];
         
@@ -527,10 +509,7 @@ export default {
           }            
         });      
         
-        this.colorStack("green");
-        this.now = changeArr;    
-        this.colorStack(this.status.color);
-        this.status.change = this.status.change + 1;
+        this.changeStack(changeArr);
       } else if(idx%4 == 3) {                
         let changeArr = [];
         
@@ -547,10 +526,7 @@ export default {
         }            
         });      
         
-        this.colorStack("green");
-        this.now = changeArr;    
-        this.colorStack(this.status.color);
-        this.status.change = this.status.change + 1;
+        this.changeStack(changeArr);
       } else if(idx%4 == 0) {                
         let changeArr = [];
         
@@ -567,10 +543,7 @@ export default {
         }            
         });      
         
-        this.colorStack("green");
-        this.now = changeArr;    
-        this.colorStack(this.status.color);
-        this.status.change = this.status.change + 1;
+        this.changeStack(changeArr);
       }
     },
     change5() {            
@@ -593,10 +566,7 @@ export default {
           }            
         });      
         
-        this.colorStack("green");
-        this.now = changeArr;    
-        this.colorStack(this.status.color);
-        this.status.change = this.status.change + 1;   
+        this.changeStack(changeArr);
       } else  if(idx%2 == 0) {                
         let changeArr = [];
         
@@ -613,10 +583,7 @@ export default {
           }            
         });      
         
-        this.colorStack("green");
-        this.now = changeArr;    
-        this.colorStack(this.status.color);
-        this.status.change = this.status.change + 1;   
+        this.changeStack(changeArr);
       }
     },
     change6() {            
@@ -638,10 +605,7 @@ export default {
           }            
         });      
         
-        this.colorStack("green");
-        this.now = changeArr;    
-        this.colorStack(this.status.color);
-        this.status.change = this.status.change + 1;   
+        this.changeStack(changeArr); 
       } else  if(idx%2 == 0) {                
         let changeArr = [];
         
@@ -658,13 +622,77 @@ export default {
           }            
         });      
         
-        this.colorStack("green");
-        this.now = changeArr;    
-        this.colorStack(this.status.color);
-        this.status.change = this.status.change + 1;   
+        this.changeStack(changeArr);
       }
     },
-  },
+    changeStack(changeArr) {
+      this.colorStack("green");
+      this.now = this.outCheck(changeArr);
+      this.colorStack(this.status.color);
+      this.status.change = this.status.change + 1;  
+    },
+    async scoreCheck() {             
+      let total = this.total.map(e => [e[0], e[1], e[2]]);
+      let arr = this.now.map(e=> e[0]).sort();
+      let destroy = false;      
+      let remake = [];
+      
+      for(let i = arr.length - 1; i >= 0; i--) {
+        for(let j = 1; j <= 10; j++) {
+          let block = arr[i] + "," + j;
+          let flag = document.getElementById(block).style.backgroundColor == "green" ? true : false;
+
+          if(flag) {
+            break;
+          } else {
+            if(j== 10) {    
+              destroy = true;                               
+              for(let a = 1; a <= 10; a++) {
+                let block = arr[i] + "," + a;                          
+                document.getElementById(block).style.backgroundColor = "green";                                           
+              }  
+              
+              total = total.filter(e => e[0] != arr[i]).map(e => [e[0], e[1], e[2]]);              
+            }                        
+          }
+        }
+      }                            
+      
+      total = total.sort();
+      
+      if(destroy) {
+        for(let i = total.length - 1; i >= 0; i--) {
+          let flag = true;          
+          let arr = total[i];
+          const color = arr[2];
+          
+          while(flag) {    
+            if(arr[0] == 20) {               
+              this.flag = false; 
+              remake.push(arr);
+              break;
+            }                                                           
+
+            let result = document.getElementById((arr[0] + 1)  + "," + arr[1]).style.backgroundColor != "green" ? true : false;
+            if(result) {
+              this.flag = false;     
+              remake.push(arr);         
+              break;
+            }
+                        
+            let block = arr[0] + "," + arr[1];            
+            document.getElementById(block).style.backgroundColor = "green";
+            arr[0] = arr[0] + 1;            
+            block = arr[0] + "," + arr[1];             
+            document.getElementById(block).style.backgroundColor = color;
+                          
+          }
+        }
+        this.total = remake;
+        return;
+      }               
+    },  
+  },  
 }
 </script>
 
