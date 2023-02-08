@@ -115,7 +115,7 @@ export default {
 
       await this.scoreCheck();                              
 
-      this.blockIdx += 1;
+      this.blockIdx += 1;      
       return this.makeBlock()
 
     },
@@ -331,8 +331,8 @@ export default {
           } else {
             changeArr.push([e[0], e[1]]);
           }      
-        });      
-                                
+        });                                                      
+
         this.changeStack(changeArr);
       } else if(idx%4 == 2) {                
         let changeArr = [];
@@ -644,100 +644,70 @@ export default {
         this.changeStack(changeArr);
       }
     },
-    changeStack(changeArr) {
+    changeStack(changeArr) {      
+
       this.colorStack("green");
       this.now = this.outCheck(changeArr);
       this.colorStack(this.status.color);
       this.status.change = this.status.change + 1;      
     },
     async scoreCheck() {             
-      let total = this.total.map(e => [e[0], e[1], e[2]]);
-      let arr = this.now.map(e=> e[0]).sort();
-      let destroy = false;      
-      let remake = [];
-      
-      for(let i = arr.length - 1; i >= 0; i--) {
-        for(let j = 1; j <= 10; j++) {
-          let block = arr[i] + "," + j;
-          let flag = document.getElementById(block).style.backgroundColor == "green" ? true : false;
+      let total = this.total.map(e => [e[0], e[1], e[2]]);                  
+      let length = this.now.map(e=> e[0]).length;           
+                    
+      for(let i = 0; i < length; i++) {        
+        for(let j = 20; j >= 1; j--) {
+          for(let n = 1; n <= 10; n++) {
+            let block = j + "," + n;            
+            let flag = document.getElementById(block).style.backgroundColor == "green" ? true : false;     
 
-          if(flag) {
-            break;
-          } else {
-            if(j== 10) {    
-              destroy = true;                               
-              for(let a = 1; a <= 10; a++) {
-                let block = arr[i] + "," + a;                          
-                document.getElementById(block).style.backgroundColor = "green";                                           
-              }  
-              
-              total = total.filter(e => e[0] != arr[i]).map(e => [e[0], e[1], e[2]]); 
-              this.score += 10;                                  
-              
-            }                        
+            if(flag) {
+              break;
+            } else {
+              if(n == 10) {                
+                for(let a = 1; a <= 10; a++) {
+                  block = j + "," + a;
+                  document.getElementById(block).style.backgroundColor = "green";
+                }
+                
+                let reMake = [];
+                total.filter((e) => {
+                  if(e[0] > j) {
+                    reMake.push([e[0], e[1], e[2]]);
+                  } else if(e[0] < j) {                    
+                    reMake.push([e[0] + 1, e[1], e[2]]);
+                  }
+                });
+                
+                total = reMake;                                               
+
+                for(let b = 0; b < total.length; b++) {
+                  block = (total[b][0] - 1) + "," + total[b][1];
+                  document.getElementById(block).style.backgroundColor = "green";
+                }
+
+                for(let c = 0; c < total.length; c++) {
+                  block = total[c][0] + "," + total[c][1];
+                  document.getElementById(block).style.backgroundColor = total[c][2];
+                }
+  
+                this.score += 10;
+
+              }
+            }  
           }
         }
-      }                            
-      
-      total = total.sort();      
-
-      if(destroy) {
-        for(let i = total.length - 1; i >= 0; i--) {
-          let flag = true;          
-          let arr = total[i];
-          const color = arr[2];
-          
-          while(flag) {    
-            if(arr[0] == 20) {               
-              this.flag = false; 
-              remake.push(arr);
-              break;
-            }             
-            
-            let sum = 0;
-            for(let i = 1; i <= 10; i++) {
-              let block = (arr[0] + 1 ) + "," + i;
-              document.getElementById(block).style.backgroundColor == "green" ? 0 : sum+= 1;                                          
-            }
-
-            if(sum == 9) {
-              this.flag = false; 
-              remake.push(arr);
-              break;
-            }
-
-
-            let result = document.getElementById((arr[0] + 1)  + "," + arr[1]).style.backgroundColor != "green" ? true : false;
-            if(result) {
-              this.flag = false;     
-              remake.push(arr);         
-              break;
-            }
-                        
-            let block = arr[0] + "," + arr[1];            
-            document.getElementById(block).style.backgroundColor = "green";
-            arr[0] = arr[0] + 1;            
-            block = arr[0] + "," + arr[1];             
-            document.getElementById(block).style.backgroundColor = color;
-                          
-          }
-        }
-        this.total = remake;        
-        this.levelUp();
-
-        return;
-      }               
-    },  
+      }
+      this.levelUp();
+      this.total = total;                   
+    },                   
     levelUp()  {
       let score = this.score;
+      let cal = Math.floor((score / 100)) ;
 
-      if(score >= 100) {
-        this.level = "Level 2";
-        this.time = 700;        
-      } else if(score >= 200) {
-        this.level = "Level 3";
-        this.time = 400;
-      }
+      this.level = "Level " + (cal + 1);
+      this.time = 1000 - (cal * 120);
+     
     },
     nextBlock(num) {     
       for(let i = 0; i < this.next.length; i++) {
