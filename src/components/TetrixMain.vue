@@ -1,30 +1,39 @@
 <template>
+  <div class="title">
+    DongTrix
+  </div>
   <body>
     <div class="container">
       <div class="popup">
         게임종료
         <button class="restart">다시시작</button>
       </div>       
-      <di class="level_container">
-        <p></p>
-        <div class="level"></div>
-      </di>
 
       <div class="board">
-        <div class="header">
-          <p>score</p>
-          <p class="score">0</p>
+        <div class="header">          
+          <p class="level">{{level}}</p>
         </div>        
         <table class="stage_container">
           <tbody class="stage">
-            <tr v-for="(y, index) in 20" :key="`y-${index}`" :id="`${y},${x}`" style="background-color: green;">
+            <tr v-for="(y, index) in 20" :key="`y-${index}`" style="background-color: green;">
               <td v-for="(x, index) in 10" :key="`x-${index}`" :id="`${y},${x}`" style="background-color:green;">
               </td>
             </tr>
           </tbody>
         </table>
       </div>      
-      <div class="next"></div>
+      <div class="next_header">Next
+        <table class="next_container" style="height: 10px; margin-top: 1em;">
+          <tbody class="next">
+            <tr v-for="(y, index) in 5" :key="`nextY-${index}`">
+              <td v-for="(x, index) in 5" :key="`nextX-${index}`" :id="`n-${y},${x}`"></td>
+            </tr>              
+          </tbody>
+        </table>
+        <div class="score">
+          점수 : {{ score }}
+        </div>
+      </div>        
     </div>
   </body>
 </template>
@@ -44,6 +53,7 @@ export default {
   data() {
     return {            
       now: [],
+      next: [],
       total: [],
       flag: true,      
       time: 1000,
@@ -51,22 +61,32 @@ export default {
         color: "",
         inedx: 0,
         change: 1,
-      },      
+      },   
+      score: 0, 
+      level: "Level 1",
+      blockNum : [],
+      blockIdx : 0,
     };
   },
   methods: {
-    init() {                  
+    init() {    
+      for(let i = 0; i < 100000; i++) {
+        this.blockNum.push(Math.floor(Math.random() * 7));
+      }
+      
       this.makeBlock();
     },
     // 블럭 생성
     async makeBlock() {                  
-
-      let num = Math.floor(Math.random() * 7);               
-      // let num = 1;
-      let block = ''; //eslint-disable-line no-unused-vars                  
+              
+      this.nextBlock(this.blockNum[this.blockIdx + 1]);
+      
+      let num = this.blockNum[this.blockIdx];
+      let block = ''; 
       this.status.color = this.colorSelect(num);   
       this.status.inedx = num;       
       this.status.change = 1; 
+      this.now = [];  
 
       //랜덤으로 블럭 생성
       for(let i = 0; i < 4; i++) {                             
@@ -87,16 +107,15 @@ export default {
 
       while(this.flag == true) {
         await this.autoMove();                     
-      }                        
-            
+      }                                                
+
       this.now.forEach((e) =>{      
         this.total.push([e[0], e[1], this.status.color]);
-      });            
+      });                  
 
-      await this.scoreCheck();            
-      
-      this.now = [];  
+      await this.scoreCheck();                              
 
+      this.blockIdx += 1;
       return this.makeBlock()
 
     },
@@ -122,7 +141,7 @@ export default {
     },
     // 자동으로 움직이는함수
     async autoMove() {          
-            
+           
       // 떨어지는 시간 동기처리
       await this.delay(this.time);      
                                                                                             
@@ -130,6 +149,7 @@ export default {
       
       if(stackMax == 20) {          
         this.flag = false;
+        this.firstCheck = false;
         return;
       }    
 
@@ -138,8 +158,7 @@ export default {
       let result = this.stackCheck(check);      
                         
       // 밑에 블럭이 있을때
-      if(result == "return") {
-        this.now = this.now.map(e=> [e[0] + 1, e[1]]);                      
+      if(result == "return") {                 
         return;
       }
 
@@ -629,7 +648,7 @@ export default {
       this.colorStack("green");
       this.now = this.outCheck(changeArr);
       this.colorStack(this.status.color);
-      this.status.change = this.status.change + 1;  
+      this.status.change = this.status.change + 1;      
     },
     async scoreCheck() {             
       let total = this.total.map(e => [e[0], e[1], e[2]]);
@@ -652,14 +671,16 @@ export default {
                 document.getElementById(block).style.backgroundColor = "green";                                           
               }  
               
-              total = total.filter(e => e[0] != arr[i]).map(e => [e[0], e[1], e[2]]);              
+              total = total.filter(e => e[0] != arr[i]).map(e => [e[0], e[1], e[2]]); 
+              this.score += 10;                                  
+              
             }                        
           }
         }
       }                            
       
-      total = total.sort();
-      
+      total = total.sort();      
+
       if(destroy) {
         for(let i = total.length - 1; i >= 0; i--) {
           let flag = true;          
@@ -671,7 +692,20 @@ export default {
               this.flag = false; 
               remake.push(arr);
               break;
-            }                                                           
+            }             
+            
+            let sum = 0;
+            for(let i = 1; i <= 10; i++) {
+              let block = (arr[0] + 1 ) + "," + i;
+              document.getElementById(block).style.backgroundColor == "green" ? 0 : sum+= 1;                                          
+            }
+
+            if(sum == 9) {
+              this.flag = false; 
+              remake.push(arr);
+              break;
+            }
+
 
             let result = document.getElementById((arr[0] + 1)  + "," + arr[1]).style.backgroundColor != "green" ? true : false;
             if(result) {
@@ -688,16 +722,50 @@ export default {
                           
           }
         }
-        this.total = remake;
+        this.total = remake;        
+        this.levelUp();
+
         return;
       }               
     },  
+    levelUp()  {
+      let score = this.score;
+
+      if(score >= 100) {
+        this.level = "Level 2";
+        this.time = 700;        
+      } else if(score >= 200) {
+        this.level = "Level 3";
+        this.time = 400;
+      }
+    },
+    nextBlock(num) {     
+      for(let i = 0; i < this.next.length; i++) {
+        document.getElementById(this.next[i]).style.backgroundColor = "skyblue";
+      }      
+
+      this.next = [];
+
+      for(let i = 0; i < 4; i++) {                             
+        let block = model[0][num][0][i];
+        block = "n-" + (block[0] + 1) + "," + (block[1] - 3);        
+        document.getElementById(block).style.backgroundColor = this.colorSelect(num); 
+        this.next.push(block);
+      }         
+    },
   },  
 }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+.title {
+  font-style: oblique;
+  font-size: 35px;
+  background-color: black;
+  color: white;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -707,7 +775,7 @@ body {
   display: flex;
   justify-content: center;
   height: 100%;
-  background-color: white;  
+  background-color:black;  
 }
 
 .container {
@@ -741,5 +809,35 @@ body {
   width: 25px;
   height: 25px;
   outline: 1px solid white;
+}
+.next_header {
+  font-weight: bold;
+  margin-top: 4em;
+  margin-left: 4em;
+  font-size: 20px;    
+}
+.next {    
+  margin: 0 auto;
+  outline: 2px solid white;
+  background-color: skyblue
+}
+.next > tr {
+  width: 100%;
+  height: 25px;
+}
+.next > tr > td {
+  width: 25px;
+  height: 25px;
+  /* outline: 1px solid white; */
+}
+
+.level {
+  margin-top: 1em;
+  font-weight: bold;
+}
+
+.score {
+  height: 100px;
+  margin-top: 5em;
 }
 </style>
