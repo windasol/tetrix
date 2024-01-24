@@ -4,7 +4,7 @@
   </div>
   <body>
     <div class="container">
-      <div class="popup">
+      <div class="popup" v-if="endflag">
         게임종료
         <button class="restart">다시시작</button>
       </div>       
@@ -66,6 +66,7 @@ export default {
       level: "Level 1",
       blockNum : [],
       blockIdx : 0,
+      endflag: false,
     };
   },
   methods: {
@@ -97,12 +98,7 @@ export default {
       
       // 밑에 블럭 있는지 체크
       let check = this.blockLimitArr(this.now.map(e=> [e[0] + 1, e[1]]));
-      let result = this.stackCheck(check);
-
-      if(result == "return") {        
-        return ;
-      }
-                  
+      let result = this.stackCheck(check);                    
       this.flag = true;      
 
       while(this.flag == true) {
@@ -113,10 +109,21 @@ export default {
         this.total.push([e[0], e[1], this.status.color]);
       });                  
 
+      if(result == "return") {            
+        window.removeEventListener('keydown', this.keydownEvent);        
+        if(confirm('다시 시작하겠습니까?')) {      
+          window.location.reload();
+        } else {
+          return;
+        }
+      }
+
       await this.scoreCheck();                              
 
       this.blockIdx += 1;      
       return this.makeBlock()
+
+      
 
     },
     // 색깔 지정
@@ -763,9 +770,9 @@ body {
   margin-bottom: 1rem;
 }
 
-.popup {
+/* .popup {
   display: none;
-}
+} */
 .stage {
   margin: 0 auto;
   outline: 2px solid white;
